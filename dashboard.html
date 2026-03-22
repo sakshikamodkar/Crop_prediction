@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Prediction Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c9c5b;
+            --secondary-color: #3498db;
+            --accent-color: #f39c12;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --hover-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .card:hover {
+            box-shadow: var(--hover-shadow);
+            transform: translateY(-3px);
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .prediction-box {
+            font-size: 0.95em;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 10px;
+            background-color: rgba(44, 156, 91, 0.08);
+        }
+        
+        .img-preview {
+            max-width: 150px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            flex-wrap: nowrap;
+        }
+        
+        .nav-tabs .nav-item {
+            flex: 1;
+            text-align: center;
+            min-width: 0;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 10px 8px;
+            width: 100%;
+            border-radius: 0;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: transparent;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 12px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+        
+        .prediction-icon {
+            font-size: 20px;
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #23804a;
+            border-color: #23804a;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(120deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(44, 156, 91, 0.05);
+        }
+        
+        .upload-box {
+            border: 2px dashed #ced4da;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .upload-box:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(44, 156, 91, 0.05);
+        }
+        
+        .prediction-badge {
+            padding: 5px 10px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .sensor-data {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .sensor-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: rgba(52, 152, 219, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 20px;
+        }
+        
+        .real-time-data {
+            background-color: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid var(--secondary-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .real-time-value {
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--secondary-color);
+        }
+        
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .sensor-card {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .sensor-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .table-responsive {
+            font-size: 0.85rem;
+        }
+        
+        .modal-content {
+            border-radius: 12px;
+        }
+        
+        .data-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 12px;
+            }
+            
+            .stat-value {
+                font-size: 1.3rem;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+            }
+            
+            .card {
+                padding: 15px !important;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .sensor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .img-preview {
+                max-width: 120px;
+            }
+            
+            .chart-container {
+                height: 180px;
+            }
+        }
+        
+        /* Very small devices */
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.1rem;
+            }
+            
+            .sensor-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .sensor-card {
+                padding: 8px;
+            }
+            
+            .sensor-value {
+                font-size: 1rem;
+            }
+            
+            .nav-tabs .nav-link {
+                font-size: 0.75rem;
+                padding: 8px 3px;
+            }
+            
+            .upload-box {
+                padding: 15px;
+            }
+            
+            .prediction-icon {
+                font-size: 18px;
+            }
+        }
+        
+        /* Large devices */
+        @media (min-width: 992px) {
+            .dashboard-container {
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+        <div class="dashboard-container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-seedling me-2"></i>Crop Monitoring
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Farmer User Options -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-user me-1"></i> Account
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-cog me-1"></i> Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="#">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="dashboard-container py-3">
+        <!-- Dashboard Header with Stats -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2" style="font-size: 1.5rem;">🌱 Crop Monitoring</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Monitor crops with sensor data & AI predictions</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <div class="stat-value" id="records-count">{% if records %}{{ records|length }}{% else %}0{% endif %}</div>
+                                <div class="stat-label">Records</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <div class="stat-value">{% if current.cnn_prediction %}1{% else %}0{% endif %}</div>
+                                <div class="stat-label">Today</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-3" id="dashboardTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="sensor-tab" onclick="showSection('sensor-section')">
+                    <i class="fas fa-sensor me-1"></i> Sensor
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="sensor-data-tab" onclick="showSection('sensor-data-section')">
+                    <i class="fas fa-database me-1"></i> Sensor Data
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="history-tab" onclick="showSection('history-section')">
+                    <i class="fas fa-history me-1"></i> History
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="graph-tab" onclick="showSection('graph-section')">
+                    <i class="fas fa-chart-line me-1"></i> Analytics
+                </a>
+            </li>
+        </ul>
+
+        <!-- Sensor Data Display -->
+        <div class="real-time-data">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" style="font-size: 1rem;"><i class="fas fa-sensor me-2"></i>Sensor Data</h5>
+                <span class="badge bg-success">Latest</span>
+            </div>
+            <div class="sensor-grid mt-2">
+                <div class="sensor-card">
+                    <i class="fas fa-temperature-high fa-lg text-danger mb-1"></i>
+                    <div class="sensor-value" id="temperature">
+                        {% if current.temperature %}{{ current.temperature }}°C{% else %}--°C{% endif %}
+                    </div>
+                    <div class="sensor-label">Temperature</div>
+                </div>
+                <div class="sensor-card">
+                    <i class="fas fa-tint fa-lg text-primary mb-1"></i>
+                    <div class="sensor-value" id="moisture">
+                        {% if current.humidity %}{{ current.humidity }}%{% else %}--%{% endif %}
+                    </div>
+                    <div class="sensor-label">Humidity</div>
+                </div>
+                <div class="sensor-card">
+                    <i class="fas fa-tint fa-lg text-primary mb-1"></i>
+                    <div class="sensor-value" id="moisture">
+                        {% if current.SoilMoisture %}{{ current.SoilMoisture }}%{% else %}0.0%{% endif %}
+                    </div>
+                    <div class="sensor-label">Moisture</div>
+                </div>
+                <div class="sensor-card">
+                    <i class="fas fa-sun fa-lg text-warning mb-1"></i>
+                    <div class="sensor-value" id="light">
+                        {% if current.light %}{{ current.light }} lux{% else %} --lux{% endif %}
+                    </div>
+                    <div class="sensor-label">Light</div>
+                </div>
+                <div class="sensor-card">
+                    <i class="fas fa-vial fa-lg text-info mb-1"></i>
+                    <div class="sensor-value" id="ph">
+                        {% if current.ph %}{{ current.ph }} pH{% else %}-- pH{% endif %}
+                    </div>
+                    <div class="sensor-label">Soil pH</div>
+                </div>
+            </div>
+        </div>
+        
+       <!-- Sensor Section -->
+<div id="sensor-section">
+    <div class="row mb-3">
+        
+        <!-- Upload Image -->
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h4 class="section-title"><i class="fas fa-upload me-2"></i> Upload Crop Image</h4>
+                <div class="upload-box">
+                    <i class="fas fa-cloud-upload-alt text-muted" style="font-size: 2rem;"></i>
+                    <p class="my-2" style="font-size: 0.9rem;">Drag & drop or click to browse</p>
+                    <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <input type="file" name="file" id="fileInput" class="d-none" required>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInput').click()">
+                            Select Image
+                        </button>
+                        <div id="fileName" class="mt-2 small text-muted"></div>
+                        <button type="submit" class="btn btn-success btn-sm mt-2 d-none" id="uploadBtn">Upload & Predict</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Image Predictions -->
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h4 class="section-title"><i class="fas fa-image me-2"></i> Image Prediction</h4>
+                {% if current.cnn_prediction %}
+                <div class="prediction-box bg-light">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="prediction-icon"><i class="fas fa-leaf"></i></span>
+                        <div>
+                            <span class="text-primary fw-bold" style="font-size: 0.95rem;">Predicted: {{ current.cnn_prediction }}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="prediction-icon"><i class="fas fa-chart-pie"></i></span>
+                        <div>
+                            <span style="font-size: 0.9rem;">Confidence: {{ current.confidence }}%</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ current.confidence }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="prediction-icon"><i class="fas fa-bug"></i></span>
+                        <div>
+                            <span style="font-size: 0.9rem;">Pest Risk: {{ current.pest_risk_combined or '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% if current.image_path %}
+                <div class="text-center mt-2">
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-camera text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2 mb-1" style="font-size: 0.9rem;">No image uploaded yet</p>
+                    <p class="small">Upload an image for AI predictions</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sensor Predictions -->
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h4 class="section-title"><i class="fas fa-sensor me-2"></i> Sensor Predictions</h4>
+                {% if current.watering_prediction %}
+                <div class="sensor-data">
+                    <div class="sensor-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0" style="font-size: 0.95rem;">Watering</h6>
+                        <p class="mb-0" style="font-size: 0.9rem;">{{ current.watering_prediction }}</p>
+                    </div>
+                </div>
+                <div class="sensor-data">
+                    <div class="sensor-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0" style="font-size: 0.95rem;">Fertilizer</h6>
+                        <p class="mb-0" style="font-size: 0.9rem;">{{ current.fertilizer_prediction }}</p>
+                    </div>
+                </div>
+                <div class="sensor-data">
+                    <div class="sensor-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0" style="font-size: 0.95rem;">Soil Condition</h6>
+                        <p class="mb-0" style="font-size: 0.9rem;">{{ current.soil_condition or '-' }}</p>
+                    </div>
+                </div>
+                <div class="sensor-data">
+                    <div class="sensor-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0" style="font-size: 0.95rem;">Pest Risk (Sensor)</h6>
+                        <p class="mb-0" style="font-size: 0.9rem;">{{ current.pest_risk_sensor or '-' }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-exclamation-circle text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2 mb-2" style="font-size: 0.9rem;">No sensor data available</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshData()">Refresh Data</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+        
+        <!-- Sensor Data Section -->
+        <div id="sensor-data-section" style="display: none;">
+            <div class="card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="section-title mb-0"><i class="fas fa-database me-2"></i> Sensor Data Records</h4>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                        <button class="btn btn-primary btn-sm ms-2" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover data-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Temperature (°C)</th>
+                                <th>Moisture (%)</th>
+                                <th>Light (lux)</th>
+                                <th>Soil pH</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in sensor_data %}
+                            <tr>
+                                <td>{{ record.timestamp }}</td>
+                                <td>{{ record.temperature or '--' }}</td>
+                                <td>{{ record.moisture or '--' }}</td>
+                                <td>{{ record.light or '--' }}</td>
+                                <td>{{ record.ph or '--' }}</td>
+                                <td>
+                                    <span class="badge bg-success">Received</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-database text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">No sensor data records available</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <nav aria-label="Sensor data pagination">
+                    <ul class="pagination justify-content-center pagination-sm">
+                        <li class="page-item disabled">
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- History Section -->
+        <div id="history-section" style="display: none;">
+            <div class="card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="section-title mb-0"><i class="fas fa-history me-2"></i> Recent Records</h4>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>Temperature</th>
+                                <th>Moisture</th>
+                                <th>Light</th>
+                                <th>pH</th>
+                                <th>Watering</th>
+                                <th>Fertilizer</th>
+                                <th>Pest Risk</th>
+                                <th>Image</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr>
+                                <td>{{ record.timestamp }}</td>
+                                <td>{{ record.temperature or '--' }}°C</td>
+                                <td>{{ record.moisture or '--' }}%</td>
+                                <td>{{ record.light or '--' }} lux</td>
+                                <td>{{ record.ph or '--' }} pH</td>
+                                <td>
+                                    <span class="prediction-badge {% if record.watering_prediction == 'Required' %}bg-warning text-dark {% elif record.watering_prediction == 'Not Required' %}bg-success {% else %}bg-secondary{% endif %}">
+                                        {{ record.watering_prediction or '-' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="prediction-badge {% if record.fertilizer_prediction == 'Required' %}bg-warning text-dark {% elif record.fertilizer_prediction == 'Not Required' %}bg-success {% else %}bg-secondary{% endif %}">
+                                        {{ record.fertilizer_prediction or '-' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if record.pest_risk_sensor %}
+                                    <span class="prediction-badge {% if record.pest_risk_sensor == 'High' %}bg-danger {% elif record.pest_risk_sensor == 'Medium' %}bg-warning text-dark {% else %}bg-success{% endif %}">
+                                        {{ record.pest_risk_sensor }}
+                                    </span>
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td>
+                                    {% if record.image_path %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ record.image_path.split('/')[-1]) }}" width="40" class="rounded shadow-sm" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="document.getElementById('modalImage').src=this.src">
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <nav aria-label="History pagination">
+                    <ul class="pagination justify-content-center pagination-sm">
+                        <li class="page-item disabled">
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Graph Section -->
+        <div id="graph-section" style="display: none;">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h4 class="section-title"><i class="fas fa-chart-line me-2"></i> Sensor Trends</h4>
+                        <div class="chart-container">
+                            <canvas id="sensorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h4 class="section-title"><i class="fas fa-chart-bar me-2"></i> Prediction Analysis</h4>
+                        <div class="chart-container">
+                            <canvas id="predictionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crop Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show/hide sections
+        function showSection(sectionId) {
+            document.getElementById('sensor-section').style.display = 'none';
+            document.getElementById('sensor-data-section').style.display = 'none';
+            document.getElementById('history-section').style.display = 'none';
+            document.getElementById('graph-section').style.display = 'none';
+            
+            document.getElementById(sectionId).style.display = 'block';
+            
+            // Update active tab
+            document.getElementById('sensor-tab').classList.remove('active');
+            document.getElementById('sensor-data-tab').classList.remove('active');
+            document.getElementById('history-tab').classList.remove('active');
+            document.getElementById('graph-tab').classList.remove('active');
+            
+            if (sectionId === 'sensor-section') {
+                document.getElementById('sensor-tab').classList.add('active');
+            } else if (sectionId === 'sensor-data-section') {
+                document.getElementById('sensor-data-tab').classList.add('active');
+            } else if (sectionId === 'history-section') {
+                document.getElementById('history-tab').classList.add('active');
+            } else {
+                document.getElementById('graph-tab').classList.add('active');
+            }
+        }
+        
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileName = this.files[0]?.name;
+            if (fileName) {
+                document.getElementById('fileName').textContent = fileName;
+                document.getElementById('uploadBtn').classList.remove('d-none');
+            }
+        });
+        
+        // Refresh data function
+        function refreshData() {
+            // Reload the page to get updated data
+            window.location.reload();
+        }
+        
+        // Initialize sensor chart
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Moisture',
+                    data: [65, 59, 70, 65, 60, 72, 68],
+                    borderColor: '#2c9c5b',
+                    backgroundColor: 'rgba(44, 156, 91, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }, {
+                    label: 'Temperature',
+                    data: [25, 28, 26, 30, 27, 29, 31],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                    }
+                }
+            }
+        });
+        // Initialize prediction chart
+        const predCtx = document.getElementById('predictionChart').getContext('2d');
+        const predictionChart = new Chart(predCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Healthy', 'Water Needed', 'Fertilizer Needed', 'Pest Detected'],
+                datasets: [{
+                    data: [65, 15, 10, 10],
+                    backgroundColor: [
+                        '#2c9c5b',
+                        '#3498db',
+                        '#f39c12',
+                        '#e74c3c'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        async function refreshDashboard() {
+        try {
+        const res = await fetch("/latest");
+        const result = await res.json();
+
+        if (result.status === "ok") {
+            const data = result.data;
+
+            // Update key fields by their element IDs (match your dashboard HTML)
+            document.getElementById("temperature").innerText = data.temperature ? data.temperature + " °C" : "--";
+            document.getElementById("humidity").innerText = data.humidity ? data.humidity + " %" : "--";
+            document.getElementById("soilMoisture").innerText = data.moisture ? data.moisture + " %" : "--";
+            document.getElementById("light").innerText = data.light ? data.light + " lx" : "--";
+            document.getElementById("ph").innerText = data.ph ? data.ph : "--";
+            document.getElementById("rain").innerText = data.rain ? (data.rain == 1 ? "Yes" : "No") : "--";
+            document.getElementById("soilCondition").innerText = data.soil_condition || "--";
+            document.getElementById("wateringPrediction").innerText = data.watering_prediction || "--";
+            document.getElementById("fertilizerPrediction").innerText = data.fertilizer_prediction || "--";
+            document.getElementById("pestRisk").innerText = data.pest_risk_sensor || "--";
+            document.getElementById("timestamp").innerText = data.timestamp || "--";
+        }
+    } catch (err) {
+        console.error("Error updating dashboard:", err);
+    }
+}
+
+// Refresh every 5 seconds
+setInterval(refreshDashboard, 5000);
+refreshDashboard();
+</script>
+
+</body>
+</html>
